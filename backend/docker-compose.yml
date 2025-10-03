@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # NMIT Portal Backend (using existing Oracle DB on host)
+  nmit-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nmit-portal-backend
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@host.docker.internal:1521:FREE
+      - SPRING_DATASOURCE_USERNAME=nmit_portal
+      - SPRING_DATASOURCE_PASSWORD=808801@AbhiDB
+      - JWT_SECRET=NmitPortalDockerSecretKeyForJWTTokenGenerationAndValidation2024
+      - JWT_EXPIRATION=86400000
+    ports:
+      - "8080:8080"
+    networks:
+      - nmit-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Nginx Reverse Proxy (Optional)
+  nginx:
+    image: nginx:alpine
+    container_name: nmit-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - nmit-backend
+    networks:
+      - nmit-network
+    restart: unless-stopped
+
+volumes:
+  oracle_data:
+    driver: local
+
+networks:
+  nmit-network:
+    driver: bridge
