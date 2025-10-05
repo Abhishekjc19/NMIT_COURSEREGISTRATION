@@ -144,9 +144,10 @@ public class AuthService {
     }
 
     public JwtAuthenticationResponse authenticateStudent(StudentLoginRequest studentLoginRequest) {
-        // Usernames in DB are stored lowercase (e.g., '1nt23ai004'); normalize input to lowercase
-        String usnNormalized = studentLoginRequest.getUsn().trim().toLowerCase();
-        Optional<User> userOptional = userRepository.findByUsername(usnNormalized);
+        // Search for user by USN (exact match, preserving case)
+        String usnInput = studentLoginRequest.getUsn().trim();
+        Optional<User> userOptional = userRepository.findByUsername(usnInput);
+        
         if (userOptional.isEmpty()) {
             throw new RuntimeException("Student not found with USN: " + studentLoginRequest.getUsn());
         }
@@ -174,7 +175,7 @@ public class AuthService {
         }
 
         Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(usnNormalized, "student123")
+            new UsernamePasswordAuthenticationToken(user.getUsername(), "student123")
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = tokenProvider.generateToken(authentication);

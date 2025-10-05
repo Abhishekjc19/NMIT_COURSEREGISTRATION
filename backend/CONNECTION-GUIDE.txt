@@ -1,0 +1,22 @@
+ORACLE DATABASE CONNECTION DETAILS FOR VS CODE
+================================================
+
+Connection Name: NMIT_Portal_Local
+
+Connection Details:
+-------------------
+Username: nmit_portal
+Password: nmit_portal_password
+Host: localhost
+Port: 1521
+Service Name: FREE
+
+Connection String Format:
+nmit_portal/nmit_portal_password@localhost:1521/FREE
+
+Steps in VS Code Oracle Extension:
+1. Click Oracle icon in left sidebar
+2. Click "+" or "Add Connection" button
+3. Enter the details above
+4. Test connection
+5. Save connection

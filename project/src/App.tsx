@@ -3,7 +3,7 @@ import { User, LogOut, Loader2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadialBarChart, RadialBar } from 'recharts';
 import { LandingPage } from './components/LandingPage';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = 'http://localhost:8090';
 
 interface Student {
   name: string;
@@ -92,7 +92,7 @@ function App() {
         },
         body: JSON.stringify({
           usn: usn,
-          dob: `${dobYear}-${dobMonth.padStart(2, '0')}-${dobDay.padStart(2, '0')}`,
+          dob: `${dobDay.padStart(2, '0')}/${dobMonth.padStart(2, '0')}/${dobYear}`,
         }),
       });
 
