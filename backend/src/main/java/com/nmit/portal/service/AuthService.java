@@ -144,6 +144,7 @@ public class AuthService {
     }
 
     public JwtAuthenticationResponse authenticateStudent(StudentLoginRequest studentLoginRequest) {
+        // Usernames in DB are stored lowercase (e.g., '1nt23ai004'); normalize input to lowercase
         String usnNormalized = studentLoginRequest.getUsn().trim().toLowerCase();
         Optional<User> userOptional = userRepository.findByUsername(usnNormalized);
         if (userOptional.isEmpty()) {
