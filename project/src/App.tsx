@@ -49,6 +49,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState<AppPage>('LANDING');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [token, setToken] = useState<string | null>(null);
 
   const [usn, setUsn] = useState('');
   const [dobDay, setDobDay] = useState('');
@@ -84,7 +85,7 @@ function App() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/student-login`, {
+      const response = await fetch(`${API_BASE_URL}/auth/student-login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -100,15 +101,17 @@ function App() {
       }
 
       const data = await response.json();
-
-      if (data.success) {
-        await fetchStudentData();
-        await fetchDashboardData();
-        await fetchCourses();
-        setCurrentPage('DASHBOARD');
-      } else {
-        setError('Invalid credentials. Please try again.');
+      const accessToken: string | undefined = data?.accessToken;
+      if (!accessToken) {
+        throw new Error('Missing token in response');
       }
+      localStorage.setItem('jwt', accessToken);
+      setToken(accessToken);
+
+      await fetchStudentData(accessToken);
+      await fetchDashboardData(accessToken);
+      await fetchCourses(accessToken);
+      setCurrentPage('DASHBOARD');
     } catch (err) {
       setError('Login failed. Please check your credentials.');
       console.error('Login error:', err);
@@ -117,28 +120,31 @@ function App() {
     }
   };
 
-  const fetchStudentData = async () => {
+  const fetchStudentData = async (jwt?: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/student/details`, {
+      const response = await fetch(`${API_BASE_URL}/students/my-profile`, {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${jwt || token || localStorage.getItem('jwt') || ''}`,
         },
       });
 
       if (response.ok) {
         const data = await response.json();
-        setStudent(data);
+        // Some controllers wrap payloads; support both direct and wrapped response
+        setStudent(data?.data || data);
       }
     } catch (err) {
       console.error('Failed to fetch student data:', err);
     }
   };
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (jwt?: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/student/dashboard`, {
+      const response = await fetch(`${API_BASE_URL}/students/dashboard`, {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${jwt || token || localStorage.getItem('jwt') || ''}`,
         },
       });
 
@@ -151,11 +157,12 @@ function App() {
     }
   };
 
-  const fetchCourses = async () => {
+  const fetchCourses = async (jwt?: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/student/courses`, {
+      const response = await fetch(`${API_BASE_URL}/students/courses`, {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${jwt || token || localStorage.getItem('jwt') || ''}`,
         },
       });
 
@@ -178,6 +185,8 @@ function App() {
     setDobMonth('');
     setDobYear('');
     setError('');
+    setToken(null);
+    localStorage.removeItem('jwt');
   };
 
   if (currentPage === 'LANDING') {
